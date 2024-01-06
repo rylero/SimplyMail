@@ -4,4 +4,4 @@ smtplib
 ssl
 pydantic
 fastapi
-uvicorn
+uvicorn[standard]
