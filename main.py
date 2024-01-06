@@ -1,16 +1,33 @@
-from typing import Union
+from typing import Annotated
 import json
+import random
 
 import smtplib, ssl
 from pydantic import BaseModel
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from fastapi import status
-from fastapi import FastAPI, HTTPException, Security
+from fastapi import FastAPI, HTTPException, Security, Request, status, Form
 from fastapi.security import APIKeyHeader
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+adminApi = FastAPI()
+
+origins = ['http://localhost:4000']  
+
+adminApi.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+
+templates = Jinja2Templates(directory="templates")
 
 ### EMAILING
 ssl_port = 465
@@ -62,11 +79,13 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
     )
 
 ### PATHS
-@app.get("/")
-def read_root():
-    return {"data": "This is the root for simplymail."}
+@app.get("/", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="index.html"
+    )
 
-@app.get("/get_clients")
+@app.get("/api/get_clients")
 def request_get_clients(api_key: str = Security(get_api_key)):
     return {
         "data": {
@@ -74,8 +93,8 @@ def request_get_clients(api_key: str = Security(get_api_key)):
         }
     }
 
-@app.post("/add_client", status_code=status.HTTP_201_CREATED)
-def request_add_client(email: Union[str, None] = None, api_key: str = Security(get_api_key)):
+@app.post("/api/add_client", status_code=status.HTTP_201_CREATED)
+def request_add_client(email: Annotated[str, Form()], api_key: str = Security(get_api_key)):
     if email == None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -101,8 +120,8 @@ def request_add_client(email: Union[str, None] = None, api_key: str = Security(g
         }
     }
 
-@app.post("/unsubscribe_client")
-def request_unsubscribe_client(email: Union[str, None] = None, api_key: str = Security(get_api_key)):
+@app.post("/api/unsubscribe_client")
+def request_unsubscribe_client(email: Annotated[str, Form()], api_key: str = Security(get_api_key)):
     if email == None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -128,7 +147,7 @@ def request_unsubscribe_client(email: Union[str, None] = None, api_key: str = Se
         }
     }
 
-@app.get("/send_to_clients")
+@app.post("/api/send_to_clients")
 def request_send_mail_to_clients(email: Email, api_key: str = Security(get_api_key)):
     if api_key not in mail_list:
         return {"message": "No clients to send to."}
@@ -146,6 +165,28 @@ def request_send_mail_to_clients(email: Email, api_key: str = Security(get_api_k
     )
     
     return {"message": "Success"}
+
+@adminApi.post("/register_new_key")
+def register_new_key(sender_email: Annotated[str, Form()], sender_password: Annotated[str, Form()]):
+    api_key = ''.join([random.choice("abcdefghijklmnopqrtuvwxyz-0123456789") for i in range(35)])
+    api_keys.append(api_key)
+    api_keys_data = {
+        "api_keys": api_keys
+    }
+    with open("apikeys.json", "w") as f:
+        json.dump(api_keys_data, f)
+    
+    with open("mailinglist.json", "w") as f:
+        mail_list[api_key] = {
+            "email": sender_email,
+            "email_password": sender_password,
+            "clients": []
+        }
+        json.dump(mail_list, f)
+    
+    return HTMLResponse(f"<span>Your API KEY is: {api_key}</span>")
+
+app.mount("/api/admin", adminApi)
 
 if __name__ == "__main__":
     import uvicorn
