@@ -1,3 +1,12 @@
+"""
+TODO LIST:
+ - Launch the server with fast api
+ - Add support for more user data collection
+ - Add support for mailing groups and multi group emails
+ - Add support for custimized emails with templating
+ - Add a email creating screen where you can send out emails through a visual interface
+"""
+
 from typing import Annotated
 import json
 import random
