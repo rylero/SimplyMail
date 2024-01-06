@@ -8,7 +8,7 @@ Activate the virtual enviorment with:\
 Mac and Linux: `source venv/bin/activate`\
 Windows: `.\venv\Scripts\activate.bat`
 
-Install via `pip install requirements.txt`
+Install via `pip install -r requirements.txt`
 
 ## Json Setup:
 apikeys.json
