@@ -1,7 +1,7 @@
 ![cover image for simply mail](/assets/images/cover.png)
  (UNFINISHED)A simple mail client that uses http requests to add and unsubscribe users, get a list of all users, and send batch emails. Great for integrating into a website with ease.
 
-Sign up here: [rylero.github.io/SimplyMail/](https://rylero.github.io/SimplyMail/)
+Sign up here: TBD
 
 ## Python Setup:
 Create a virtual environment via: `python -m venv venv`
