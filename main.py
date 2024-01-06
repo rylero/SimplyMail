@@ -7,11 +7,9 @@ from pydantic import BaseModel
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from fastapi import FastAPI, HTTPException, Security, Request, status, Form
+from fastapi import FastAPI, HTTPException, Security, status, Form
 from fastapi.security import APIKeyHeader
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -27,7 +25,6 @@ adminApi.add_middleware(
     allow_headers=['*'],
 )
 
-templates = Jinja2Templates(directory="templates")
 
 ### EMAILING
 ssl_port = 465
@@ -80,10 +77,10 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
 
 ### PATHS
 @app.get("/", response_class=HTMLResponse)
-def read_root(request: Request):
-    return templates.TemplateResponse(
-        request=request, name="index.html"
-    )
+def read_root():
+    with open('index.html') as f:
+        content = f.read()
+    return HTMLResponse(content)
 
 @app.get("/api/get_clients")
 def request_get_clients(api_key: str = Security(get_api_key)):
