@@ -1,3 +1,2 @@
-apikeys.json
-mailinglist.json
+*.json
 venv/
